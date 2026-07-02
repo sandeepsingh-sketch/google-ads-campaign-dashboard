@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Google Ads Performance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f6f7f9;
+    color: #1a1d21;
+    padding: 24px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header { margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0 0 4px 0; }
+  .sub { color: #5f6368; font-size: 13px; }
+  .badge {
+    display: inline-block; background: #e8f0fe; color: #1a56db;
+    padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-left: 8px;
+  }
+  .controls {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;
+  }
+  .seg { display: inline-flex; background: #f1f3f4; border-radius: 8px; padding: 3px; }
+  .seg button {
+    border: none; background: transparent; padding: 7px 16px; font-size: 13px; font-weight: 600;
+    border-radius: 6px; cursor: pointer; color: #5f6368;
+  }
+  .seg button.active { background: #1a56db; color: #fff; }
+  .seg-label { font-size: 12px; color: #5f6368; font-weight: 600; margin-right: 8px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 16px;
+  }
+  .kpi .label { font-size: 12px; color: #5f6368; margin-bottom: 6px; }
+  .kpi .value { font-size: 20px; font-weight: 700; }
+  .kpi .delta { font-size: 11px; margin-top: 4px; color: #188038; }
+  .card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; margin-bottom: 18px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 4px 0; }
+  .card .note { font-size: 12px; color: #5f6368; margin-bottom: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f0f1f2; white-space: nowrap; }
+  th { color: #5f6368; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .chip.learning { background: #fef7e0; color: #a86700; }
+  .chip.eligible { background: #e6f4ea; color: #188038; }
+  .chip.paused { background: #fce8e6; color: #c5221f; }
+  .chip.low { background: #f1f3f4; color: #5f6368; }
+  .chip.newtag { background: #e8f0fe; color: #1a56db; margin-left: 6px; }
+  .chart-box { position: relative; height: 260px; }
+  .chart-box.tall { height: 320px; }
+  .campaign-name { font-weight: 600; }
+  .foot { font-size: 12px; color: #80868b; margin-top: 24px; line-height: 1.6; }
+  .two-col-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid2, .two-col-charts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Google Ads Campaign Performance <span class="badge">Antier · Search</span></h1>
+    <div class="sub">Scope: Ai Development, Chatbot, GenAI, Workflow Automation &nbsp;·&nbsp; Account currency: ₹ INR &nbsp;·&nbsp; Data captured 2 Jul 2026</div>
+  </header>
+
+  <div class="controls">
+    <div>
+      <span class="seg-label">Date range</span>
+      <span class="seg" id="rangeSeg">
+        <button data-range="d7">Last 7 days</button>
+        <button data-range="d30" class="active">Last 30 days</button>
+        <button data-range="d90">Last 90 days</button>
+      </span>
+    </div>
+    <div>
+      <span class="seg-label">Breakdown period (keywords / locations / age / gender)</span>
+      <span class="seg" id="brkSeg">
+        <button data-brk="d30" class="active">Last 30 days</button>
+        <button data-brk="d90">Last 90 days</button>
+      </span>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="card">
+    <h2>Campaign comparison</h2>
+    <div class="note">Clicks, cost and conversions per campaign for the selected date range</div>
+    <div class="grid2">
+      <div class="chart-box"><canvas id="campChart"></canvas></div>
+      <div style="overflow:auto">
+        <table id="campTable">
+          <thead><tr><th>Campaign</th><th class="num">Clicks</th><th class="num">Impr.</th><th class="num">CTR</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Keywords by campaign</h2>
+    <div class="note" id="kwNote">Search keywords driving clicks and cost, per campaign. Only keywords with recorded impressions are listed; the rest of each campaign's keyword list has 0 activity in this window.</div>
+    <div class="seg" id="kwCampSeg" style="margin-bottom:14px;">
+      <button data-camp="Ai Development" class="active">Ai Development</button>
+      <button data-camp="Chatbot">Chatbot</button>
+      <button data-camp="GenAI">GenAI</button>
+      <button data-camp="Workflow Automation">Workflow Automation</button>
+    </div>
+    <div style="overflow:auto">
+      <table id="kwTable">
+        <thead><tr><th>Keyword</th><th>Match type</th><th>Status</th><th class="num">Clicks</th><th class="num">Impr.</th><th class="num">CTR</th><th class="num">Avg. CPC</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Locations — Ai Development</h2>
+    <div class="note">Where clicks and spend are coming from</div>
+    <div class="grid2">
+      <div class="chart-box"><canvas id="locChart"></canvas></div>
+      <div style="overflow:auto">
+        <table id="locTable">
+          <thead><tr><th>Location</th><th class="num">Clicks</th><th class="num">Impr.</th><th class="num">CTR</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Audience demographics — Ai Development</h2>
+    <div class="note">Age and gender breakdown of clicks</div>
+    <div class="two-col-charts">
+      <div class="chart-box"><canvas id="ageChart"></canvas></div>
+      <div class="chart-box"><canvas id="genderChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 2 Jul 2026 — Chatbot, GenAI and Workflow Automation are newly launched / in learning status with low volume, so their keyword, location and demographic breakdowns are mostly zero so far. On 1 Jul 2026 a bulk keyword import (Google Ads Editor) added a large batch of new keywords across Chatbot, GenAI and Workflow Automation, plus two campaign-brand-term keywords in GenAI ("openai clone", "chatgpt clone") that were added and immediately paused. Keyword tables below list every keyword in each campaign's active ad group(s), including ones with 0 impressions/clicks; keywords in other, currently-paused ad groups within these campaigns are out of scope for this view. Re-run the pull to refresh with a later snapshot.
+  </div>
+</div>
+
+<script>
+const campaignData = {
+  d7: [
+    {name:"Ai Development", status:"learning", clicks:33, impr:672, ctr:4.91, cpc:124.90, cost:4121.59, conv:1.00, convRate:3.03},
+    {name:"Chatbot", status:"learning", clicks:3, impr:75, ctr:4.00, cpc:126.47, cost:379.41, conv:0, convRate:0},
+    {name:"GenAI", status:"learning", clicks:1, impr:30, ctr:3.33, cpc:99.06, cost:99.06, conv:0, convRate:0},
+    {name:"Workflow Automation", status:"learning", clicks:0, impr:11, ctr:0, cpc:0, cost:0, conv:0, convRate:0}
+  ],
+  d30: [
+    {name:"Ai Development", status:"learning", clicks:140, impr:2676, ctr:5.23, cpc:116.22, cost:16271.11, conv:3.00, convRate:2.14},
+    {name:"Chatbot", status:"learning", clicks:3, impr:75, ctr:4.00, cpc:126.47, cost:379.41, conv:0, convRate:0},
+    {name:"GenAI", status:"learning", clicks:1, impr:30, ctr:3.33, cpc:99.06, cost:99.06, conv:0, convRate:0},
+    {name:"Workflow Automation", status:"learning", clicks:0, impr:11, ctr:0, cpc:0, cost:0, conv:0, convRate:0}
+  ],
+  d90: [
+    {name:"Ai Development", status:"learning", clicks:165, impr:3145, ctr:5.25, cpc:115.42, cost:19044.64, conv:3.00, convRate:1.82},
+    {name:"Chatbot", status:"learning", clicks:12, impr:265, ctr:4.53, cpc:111.61, cost:1339.36, conv:0, convRate:0},
+    {name:"Workflow Automation", status:"learning", clicks:5, impr:230, ctr:2.17, cpc:217.01, cost:1085.03, conv:0, convRate:0},
+    {name:"GenAI", status:"learning", clicks:4, impr:81, ctr:4.94, cpc:120.89, cost:483.55, conv:0, convRate:0}
+  ]
+};
+
+// Keyword performance grouped by campaign. Every keyword in each campaign's active ad group(s)
+// is listed (including 0 impression/0 click keywords). status reflects Google Ads' Status column;
+// isNew flags keywords added to the account on 1 Jul 2026 (confirmed via change history / Google
+// Ads Editor bulk-import log dated 1 Jul 2026).
+const keywordDataByCampaign = {
+  "Ai Development": {
+    d30: {
+      rows: [
+        {kw:'"ai powered solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:97, impr:1729, ctr:5.61, cpc:120.88, cost:11725.25, conv:3.00},
+        {kw:'"artificial intelligence solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:8, impr:252, ctr:3.17, cpc:97.63, cost:781.08, conv:0},
+        {kw:'"ai software development"', match:"Phrase", status:"Eligible", isNew:false, clicks:2, impr:30, ctr:6.67, cpc:118.61, cost:237.22, conv:0},
+        {kw:'"ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:1, impr:57, ctr:1.75, cpc:61.57, cost:61.57, conv:0},
+        {kw:'"ai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise ai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai development services"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:2, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai app development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:3, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai software companies"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:3, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"ai software development services", match:"Broad", status:"Eligible", isNew:false, clicks:0, impr:2, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai software development companies"', match:"Phrase", status:"Eligible", isNew:true, clicks:1, impr:1, ctr:100.00, cpc:138.78, cost:138.78, conv:0},
+        {kw:'"artificial intelligence development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"hire ai developers"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai software development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai consulting company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai product development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"llm development services"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    },
+    d90: {
+      rows: [
+        {kw:'"ai powered solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:111, impr:1947, ctr:5.70, cpc:118.18, cost:13117.77, conv:3.00},
+        {kw:'"artificial intelligence solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:14, impr:373, ctr:3.75, cpc:103.06, cost:1442.90, conv:0},
+        {kw:'"ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:1, impr:57, ctr:1.75, cpc:61.57, cost:61.57, conv:0},
+        {kw:'"ai software development"', match:"Phrase", status:"Eligible", isNew:false, clicks:2, impr:30, ctr:6.67, cpc:118.61, cost:237.22, conv:0},
+        {kw:'"ai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:1, impr:11, ctr:9.09, cpc:137.83, cost:137.83, conv:0},
+        {kw:'"enterprise ai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:7, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai development services"', match:"Phrase", status:"Eligible", isNew:false, clicks:1, impr:5, ctr:20.00, cpc:70.49, cost:70.49, conv:0},
+        {kw:'"ai app development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:3, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai software companies"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:3, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"ai software development services", match:"Broad", status:"Eligible", isNew:false, clicks:0, impr:2, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai software development companies"', match:"Phrase", status:"Eligible", isNew:true, clicks:1, impr:1, ctr:100.00, cpc:138.78, cost:138.78, conv:0},
+        {kw:'"artificial intelligence development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"hire ai developers"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai software development company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai consulting company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai product development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"llm development services"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    }
+  },
+  "Chatbot": {
+    d30: {
+      rows: [
+        {kw:'"ai chatbot platform"', match:"Phrase", status:"Eligible", isNew:false, clicks:3, impr:73, ctr:4.11, cpc:126.47, cost:379.41, conv:0},
+        {kw:"[AI chatbot for healthcare]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot for business"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"real estate lead generation chatbot"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[insurance chatbot development]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"product recommendation chatbot"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for real estate]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for ecommerce]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for education]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for banking]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"student support chatbot"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"healthcare virtual assistant development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"order tracking chatbot for ecommerce"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[HIPAA compliant chatbot development]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[ecommerce chatbot development company]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[medical chatbot development company]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[hotel booking chatbot development]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"AI chatbot for patient appointment booking"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"abandoned cart chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"KYC chatbot development for fintech"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"property inquiry chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"employee onboarding chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[fintech chatbot development company]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"travel booking chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"claims processing chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"e-learning chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"banking virtual assistant development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[HR chatbot development company]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"recruitment chatbot development company"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"best chatbot development company"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot development company"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    },
+    d90: {
+      rows: [
+        {kw:'"ai chatbot platform"', match:"Phrase", status:"Eligible", isNew:false, clicks:3, impr:73, ctr:4.11, cpc:126.47, cost:379.41, conv:0},
+        {kw:"[AI chatbot for healthcare]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot for business"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"real estate lead generation chatbot"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[insurance chatbot development]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"product recommendation chatbot"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for real estate]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for ecommerce]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for education]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[AI chatbot for banking]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"student support chatbot"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"healthcare virtual assistant development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"order tracking chatbot for ecommerce"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[HIPAA compliant chatbot development]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[ecommerce chatbot development company]", match:"Exact", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[medical chatbot development company]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[hotel booking chatbot development]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"AI chatbot for patient appointment booking"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"abandoned cart chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"KYC chatbot development for fintech"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"property inquiry chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"employee onboarding chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[fintech chatbot development company]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"travel booking chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"claims processing chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"e-learning chatbot development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"banking virtual assistant development"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[HR chatbot development company]", match:"Exact", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"recruitment chatbot development company"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"best chatbot development company"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot development company"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"ai chatbot development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    }
+  },
+  "GenAI": {
+    d30: {
+      rows: [
+        {kw:'"generative ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:14, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:1, impr:9, ctr:11.11, cpc:99.06, cost:99.06, conv:0},
+        {kw:'"generative ai services"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:4, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai app development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:2, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"genai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[openai clone]", match:"Exact", status:"Paused", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai development company"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[chatgpt clone]", match:"Exact", status:"Paused", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai consulting"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"genai services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"gen ai development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"gen ai development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai technology services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom generative ai development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"genai services & solutions"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    },
+    d90: {
+      rows: [
+        {kw:'"generative ai development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:14, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:1, impr:9, ctr:11.11, cpc:99.06, cost:99.06, conv:0},
+        {kw:'"generative ai services"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:4, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai app development"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:2, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"genai solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[openai clone]", match:"Exact", status:"Paused", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai development company"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:"[chatgpt clone]", match:"Exact", status:"Paused", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai consulting"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"genai services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"gen ai development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"gen ai development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"generative ai technology services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom generative ai development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"genai services & solutions"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    }
+  },
+  "Workflow Automation": {
+    d30: {
+      rows: [
+        {kw:'"workflow automation solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:6, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:5, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"business workflow automation services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom business process automation"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation consulting"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation agency"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"digital workflow automation services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation for enterprises"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation software development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom workflow automation development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"end to end workflow automation solutions"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise workflow automation development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise workflow automation services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation service provider"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"reduce manual workflow using ai"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    },
+    d90: {
+      rows: [
+        {kw:'"workflow automation solutions"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:6, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation company"', match:"Phrase", status:"Eligible", isNew:false, clicks:0, impr:5, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"business workflow automation services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom business process automation"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation consulting"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation agency"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"digital workflow automation services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation for enterprises"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation software development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"custom workflow automation development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"end to end workflow automation solutions"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise workflow automation development"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"enterprise workflow automation services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation development services"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"workflow automation service provider"', match:"Phrase", status:"Eligible", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+        {kw:'"reduce manual workflow using ai"', match:"Phrase", status:"Not eligible - Low search volume", isNew:true, clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      ]
+    }
+  }
+};
+
+const locationData = {
+  d30: [
+    {loc:"Saudi Arabia", clicks:43, impr:685, ctr:6.28, cost:4231.45, conv:1.00},
+    {loc:"United Arab Emirates", clicks:23, impr:460, ctr:5.00, cost:3238.37, conv:0},
+    {loc:"United States", clicks:4, impr:201, ctr:1.99, cost:2629.66, conv:0},
+    {loc:"South Korea", clicks:2, impr:60, ctr:3.33, cost:140.93, conv:0},
+    {loc:"United Kingdom", clicks:1, impr:65, ctr:1.54, cost:287.79, conv:0},
+    {loc:"Australia", clicks:0, impr:37, ctr:0, cost:0, conv:0},
+    {loc:"Canada", clicks:0, impr:40, ctr:0, cost:0, conv:0},
+    {loc:"Singapore", clicks:0, impr:35, ctr:0, cost:0, conv:0}
+  ],
+  d90: [
+    {loc:"Saudi Arabia", clicks:64, impr:964, ctr:6.64, cost:6313.52, conv:1.00},
+    {loc:"United Arab Emirates", clicks:31, impr:582, ctr:5.33, cost:3947.38, conv:0},
+    {loc:"South Korea", clicks:8, impr:177, ctr:4.52, cost:857.03, conv:0},
+    {loc:"United States", clicks:4, impr:208, ctr:1.92, cost:2629.66, conv:0},
+    {loc:"United Kingdom", clicks:1, impr:81, ctr:1.23, cost:287.79, conv:0},
+    {loc:"Australia", clicks:0, impr:47, ctr:0, cost:0, conv:0},
+    {loc:"Canada", clicks:0, impr:72, ctr:0, cost:0, conv:0},
+    {loc:"Singapore", clicks:0, impr:93, ctr:0, cost:0, conv:0}
+  ]
+};
+
+const ageData = {
+  d30: [
+    {label:"18-24", clicks:0}, {label:"25-34", clicks:48}, {label:"35-44", clicks:30},
+    {label:"45-54", clicks:7}, {label:"55-64", clicks:1}, {label:"65+", clicks:7}, {label:"Unknown", clicks:16}
+  ],
+  d90: [
+    {label:"18-24", clicks:0}, {label:"25-34", clicks:68}, {label:"35-44", clicks:33},
+    {label:"45-54", clicks:8}, {label:"55-64", clicks:1}, {label:"65+", clicks:7}, {label:"Unknown", clicks:24}
+  ]
+};
+
+const genderData = {
+  d30: [{label:"Female", clicks:24}, {label:"Male", clicks:69}, {label:"Unknown", clicks:16}],
+  d90: [{label:"Female", clicks:28}, {label:"Male", clicks:89}, {label:"Unknown", clicks:24}]
+};
+
+const rangeLabel = {d7:"Last 7 days", d30:"Last 30 days", d90:"Last 90 days"};
+const fmtInr = n => "₹" + Number(n).toLocaleString("en-IN", {maximumFractionDigits:0});
+const fmtNum = n => Number(n).toLocaleString("en-IN");
+const fmtPct = n => Number(n).toFixed(2) + "%";
+
+let campChart, locChart, ageChart, genderChart;
+let currentRange = "d30";
+let currentBrk = "d30";
+
+function renderKpis(range){
+  const rows = campaignData[range];
+  const totals = rows.reduce((a,r)=>{
+    a.clicks+=r.clicks; a.impr+=r.impr; a.cost+=r.cost; a.conv+=r.conv; return a;
+  }, {clicks:0, impr:0, cost:0, conv:0});
+  const ctr = totals.impr ? (totals.clicks/totals.impr*100) : 0;
+  const cpc = totals.clicks ? (totals.cost/totals.clicks) : 0;
+  const convRate = totals.clicks ? (totals.conv/totals.clicks*100) : 0;
+  const cards = [
+    {label:"Clicks", value: fmtNum(totals.clicks)},
+    {label:"Impressions", value: fmtNum(totals.impr)},
+    {label:"Cost", value: fmtInr(totals.cost)},
+    {label:"CTR", value: fmtPct(ctr)},
+    {label:"Avg. CPC", value: fmtInr(cpc.toFixed(0))},
+  ];
+  document.getElementById("kpiGrid").innerHTML = cards.map(c =>
+    `<div class="kpi"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`
+  ).join("") + `<div class="kpi"><div class="label">Conversions</div><div class="value">${totals.conv.toFixed(0)}</div></div>`;
+}
+
+function renderCampaignSection(range){
+  const rows = campaignData[range];
+  const tbody = document.querySelector("#campTable tbody");
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td class="campaign-name">${r.name}</td>
+    <td class="num">${fmtNum(r.clicks)}</td>
+    <td class="num">${fmtNum(r.impr)}</td>
+    <td class="num">${fmtPct(r.ctr)}</td>
+    <td class="num">${fmtInr(r.cost)}</td>
+    <td class="num">${r.conv.toFixed(0)}</td>
+  </tr>`).join("");
+
+  const ctx = document.getElementById("campChart");
+  const chartData = {
+    labels: rows.map(r=>r.name),
+    datasets: [
+      { label: "Clicks", data: rows.map(r=>r.clicks), backgroundColor: "#1a56db", yAxisID: "y" },
+      { label: "Cost (₹)", data: rows.map(r=>r.cost), backgroundColor: "#fbbc04", yAxisID: "y1" }
+    ]
+  };
+  if (campChart) { campChart.data = chartData; campChart.update(); }
+  else {
+    campChart = new Chart(ctx, {
+      type: "bar",
+      data: chartData,
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          y: { position:"left", beginAtZero:true, title:{display:true,text:"Clicks"} },
+          y1: { position:"right", beginAtZero:true, grid:{drawOnChartArea:false}, title:{display:true,text:"Cost (₹)"} }
+        },
+        plugins:{ legend:{ position:"bottom" } }
+      }
+    });
+  }
+}
+
+let currentKwCampaign = "Ai Development";
+
+function statusChip(status){
+  if (status === "Paused") return `<span class="chip paused">Paused</span>`;
+  if (status && status.indexOf("Not eligible") === 0) return `<span class="chip low">${status.replace("Not eligible - ","")}</span>`;
+  return `<span class="chip eligible">Eligible</span>`;
+}
+
+function renderKeywordTable(brk, campaign){
+  campaign = campaign || currentKwCampaign;
+  const data = keywordDataByCampaign[campaign][brk];
+  const tbody = document.querySelector("#kwTable tbody");
+  tbody.innerHTML = data.rows.map(k => `<tr>
+    <td>${k.kw}${k.isNew ? '<span class="chip newtag">New</span>' : ""}</td>
+    <td>${k.match}</td>
+    <td>${statusChip(k.status)}</td>
+    <td class="num">${fmtNum(k.clicks)}</td><td class="num">${fmtNum(k.impr)}</td>
+    <td class="num">${fmtPct(k.ctr)}</td><td class="num">${k.cpc?fmtInr(k.cpc.toFixed(0)):"—"}</td>
+    <td class="num">${fmtInr(k.cost)}</td><td class="num">${k.conv.toFixed(0)}</td>
+  </tr>`).join("");
+  const newCount = data.rows.filter(k=>k.isNew).length;
+  const pausedCount = data.rows.filter(k=>k.status==="Paused").length;
+  document.getElementById("kwNote").textContent =
+    `Showing all ${data.rows.length} keywords in ${campaign}'s active ad group(s) for ${rangeLabel[brk]}, including 0 impression/0 click keywords` +
+    ` — ${newCount} added 1 Jul 2026${pausedCount ? `, ${pausedCount} currently paused` : ""}.`;
+}
+
+function renderLocations(brk){
+  const rows = locationData[brk];
+  const tbody = document.querySelector("#locTable tbody");
+  tbody.innerHTML = rows.map(l => `<tr>
+    <td>${l.loc}</td><td class="num">${fmtNum(l.clicks)}</td><td class="num">${fmtNum(l.impr)}</td>
+    <td class="num">${fmtPct(l.ctr)}</td><td class="num">${fmtInr(l.cost)}</td><td class="num">${l.conv.toFixed(0)}</td>
+  </tr>`).join("");
+
+  const ctx = document.getElementById("locChart");
+  const chartData = {
+    labels: rows.map(r=>r.loc),
+    datasets: [{ label:"Clicks", data: rows.map(r=>r.clicks), backgroundColor:"#1a56db" }]
+  };
+  if (locChart) { locChart.data = chartData; locChart.update(); }
+  else {
+    locChart = new Chart(ctx, {
+      type:"bar",
+      data: chartData,
+      options: { indexAxis:"y", responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+    });
+  }
+}
+
+function renderDemographics(brk){
+  const age = ageData[brk], gender = genderData[brk];
+  const ageCtx = document.getElementById("ageChart");
+  const ageChartData = {
+    labels: age.map(a=>a.label),
+    datasets: [{ label:"Clicks", data: age.map(a=>a.clicks), backgroundColor:"#34a853" }]
+  };
+  if (ageChart) { ageChart.data = ageChartData; ageChart.update(); }
+  else {
+    ageChart = new Chart(ageCtx, {
+      type:"bar", data: ageChartData,
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, title:{display:true,text:"Clicks by age"}} }
+    });
+  }
+
+  const gCtx = document.getElementById("genderChart");
+  const gChartData = {
+    labels: gender.map(g=>g.label),
+    datasets: [{ data: gender.map(g=>g.clicks), backgroundColor:["#ea4335","#1a56db","#9aa0a6"] }]
+  };
+  if (genderChart) { genderChart.data = gChartData; genderChart.update(); }
+  else {
+    genderChart = new Chart(gCtx, {
+      type:"doughnut", data: gChartData,
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}, title:{display:true,text:"Clicks by gender"}} }
+    });
+  }
+}
+
+function renderAll(){
+  renderKpis(currentRange);
+  renderCampaignSection(currentRange);
+  renderKeywordTable(currentBrk, currentKwCampaign);
+  renderLocations(currentBrk);
+  renderDemographics(currentBrk);
+}
+
+document.getElementById("rangeSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button"); if(!btn) return;
+  currentRange = btn.dataset.range;
+  document.querySelectorAll("#rangeSeg button").forEach(b=>b.classList.toggle("active", b===btn));
+  renderKpis(currentRange);
+  renderCampaignSection(currentRange);
+});
+
+document.getElementById("brkSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button"); if(!btn) return;
+  currentBrk = btn.dataset.brk;
+  document.querySelectorAll("#brkSeg button").forEach(b=>b.classList.toggle("active", b===btn));
+  renderKeywordTable(currentBrk, currentKwCampaign);
+  renderLocations(currentBrk);
+  renderDemographics(currentBrk);
+});
+
+document.getElementById("kwCampSeg").addEventListener("click", e => {
+  const btn = e.target.closest("button"); if(!btn) return;
+  currentKwCampaign = btn.dataset.camp;
+  document.querySelectorAll("#kwCampSeg button").forEach(b=>b.classList.toggle("active", b===btn));
+  renderKeywordTable(currentBrk, currentKwCampaign);
+});
+
+renderAll();
+</script>
+</body>
+</html>
