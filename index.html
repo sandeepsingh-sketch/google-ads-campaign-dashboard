@@ -57,6 +57,10 @@
   .chip.paused { background: #fce8e6; color: #c5221f; }
   .chip.low { background: #f1f3f4; color: #5f6368; }
   .chip.newtag { background: #e8f0fe; color: #1a56db; margin-left: 6px; }
+  .chip.removed { background: #fce8e6; color: #c5221f; }
+  .chip.active { background: #e6f4ea; color: #188038; }
+  .alert { background: #fef7e0; border: 1px solid #f9d67a; color: #7a5c00; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .alert.show { display: block; }
   .chart-box { position: relative; height: 260px; }
   .chart-box.tall { height: 320px; }
   .campaign-name { font-weight: 600; }
@@ -128,12 +132,13 @@
 
   <div class="card">
     <h2>Locations — Ai Development</h2>
-    <div class="note">Where clicks and spend are coming from</div>
+    <div class="note" id="locNote">Where clicks and spend are coming from</div>
+    <div class="alert" id="locAlert"></div>
     <div class="grid2">
       <div class="chart-box"><canvas id="locChart"></canvas></div>
       <div style="overflow:auto">
         <table id="locTable">
-          <thead><tr><th>Location</th><th class="num">Clicks</th><th class="num">Impr.</th><th class="num">CTR</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
+          <thead><tr><th>Location</th><th>Status</th><th class="num">Clicks</th><th class="num">Impr.</th><th class="num">CTR</th><th class="num">Cost</th><th class="num">Conv.</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -150,7 +155,7 @@
   </div>
 
   <div class="foot">
-    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 2 Jul 2026 — Chatbot, GenAI and Workflow Automation are newly launched / in learning status with low volume, so their keyword, location and demographic breakdowns are mostly zero so far. On 1 Jul 2026 a bulk keyword import (Google Ads Editor) added a large batch of new keywords across Chatbot, GenAI and Workflow Automation, plus two campaign-brand-term keywords in GenAI ("openai clone", "chatgpt clone") that were added and immediately paused. Keyword tables below list every keyword in each campaign's active ad group(s), including ones with 0 impressions/clicks; keywords in other, currently-paused ad groups within these campaigns are out of scope for this view. Re-run the pull to refresh with a later snapshot.
+    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 2 Jul 2026 — Chatbot, GenAI and Workflow Automation are newly launched / in learning status with low volume, so their keyword, location and demographic breakdowns are mostly zero so far. On 1 Jul 2026 a bulk keyword import (Google Ads Editor) added a large batch of new keywords across Chatbot, GenAI and Workflow Automation, plus two campaign-brand-term keywords in GenAI ("openai clone", "chatgpt clone") that were added and immediately paused. Keyword tables below list every keyword in each campaign's active ad group(s), including ones with 0 impressions/clicks; keywords in other, currently-paused ad groups within these campaigns are out of scope for this view. On 2 Jul 2026 Saudi Arabia and South Korea — Ai Development's top two performing locations — were removed from location targeting; the Locations table flags every location as Active or Removed, with removal dates shown for each. Re-run the pull to refresh with a later snapshot.
   </div>
 </div>
 
@@ -393,26 +398,39 @@ const keywordDataByCampaign = {
   }
 };
 
+// status: "Active" = currently targeted; "Removed" = location targeting removed from this
+// campaign (metrics shown are from while it was still active in this window). Removal dates
+// confirmed via change history.
 const locationData = {
   d30: [
-    {loc:"Saudi Arabia", clicks:43, impr:685, ctr:6.28, cost:4231.45, conv:1.00},
-    {loc:"United Arab Emirates", clicks:23, impr:460, ctr:5.00, cost:3238.37, conv:0},
-    {loc:"United States", clicks:4, impr:201, ctr:1.99, cost:2629.66, conv:0},
-    {loc:"South Korea", clicks:2, impr:60, ctr:3.33, cost:140.93, conv:0},
-    {loc:"United Kingdom", clicks:1, impr:65, ctr:1.54, cost:287.79, conv:0},
-    {loc:"Australia", clicks:0, impr:37, ctr:0, cost:0, conv:0},
-    {loc:"Canada", clicks:0, impr:40, ctr:0, cost:0, conv:0},
-    {loc:"Singapore", clicks:0, impr:35, ctr:0, cost:0, conv:0}
+    {loc:"Saudi Arabia", clicks:43, impr:685, ctr:6.28, cost:4231.45, conv:1.00, status:"Removed", removedOn:"2 Jul 2026"},
+    {loc:"United Arab Emirates", clicks:23, impr:460, ctr:5.00, cost:3238.37, conv:0, status:"Active"},
+    {loc:"United States", clicks:4, impr:201, ctr:1.99, cost:2629.66, conv:0, status:"Active"},
+    {loc:"South Korea", clicks:2, impr:60, ctr:3.33, cost:140.93, conv:0, status:"Removed", removedOn:"2 Jul 2026"},
+    {loc:"United Kingdom", clicks:1, impr:65, ctr:1.54, cost:287.79, conv:0, status:"Active"},
+    {loc:"Australia", clicks:0, impr:37, ctr:0, cost:0, conv:0, status:"Active"},
+    {loc:"Canada", clicks:0, impr:40, ctr:0, cost:0, conv:0, status:"Active"},
+    {loc:"Singapore", clicks:0, impr:35, ctr:0, cost:0, conv:0, status:"Active"},
+    {loc:"India", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"22 Jun 2026"},
+    {loc:"France", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"},
+    {loc:"Germany", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"},
+    {loc:"Spain", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"},
+    {loc:"Switzerland", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"}
   ],
   d90: [
-    {loc:"Saudi Arabia", clicks:64, impr:964, ctr:6.64, cost:6313.52, conv:1.00},
-    {loc:"United Arab Emirates", clicks:31, impr:582, ctr:5.33, cost:3947.38, conv:0},
-    {loc:"South Korea", clicks:8, impr:177, ctr:4.52, cost:857.03, conv:0},
-    {loc:"United States", clicks:4, impr:208, ctr:1.92, cost:2629.66, conv:0},
-    {loc:"United Kingdom", clicks:1, impr:81, ctr:1.23, cost:287.79, conv:0},
-    {loc:"Australia", clicks:0, impr:47, ctr:0, cost:0, conv:0},
-    {loc:"Canada", clicks:0, impr:72, ctr:0, cost:0, conv:0},
-    {loc:"Singapore", clicks:0, impr:93, ctr:0, cost:0, conv:0}
+    {loc:"Saudi Arabia", clicks:64, impr:964, ctr:6.64, cost:6313.52, conv:1.00, status:"Removed", removedOn:"2 Jul 2026"},
+    {loc:"United Arab Emirates", clicks:31, impr:582, ctr:5.33, cost:3947.38, conv:0, status:"Active"},
+    {loc:"South Korea", clicks:8, impr:177, ctr:4.52, cost:857.03, conv:0, status:"Removed", removedOn:"2 Jul 2026"},
+    {loc:"United States", clicks:4, impr:208, ctr:1.92, cost:2629.66, conv:0, status:"Active"},
+    {loc:"United Kingdom", clicks:1, impr:81, ctr:1.23, cost:287.79, conv:0, status:"Active"},
+    {loc:"Australia", clicks:0, impr:47, ctr:0, cost:0, conv:0, status:"Active"},
+    {loc:"Canada", clicks:0, impr:72, ctr:0, cost:0, conv:0, status:"Active"},
+    {loc:"Singapore", clicks:0, impr:93, ctr:0, cost:0, conv:0, status:"Active"},
+    {loc:"India", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"22 Jun 2026"},
+    {loc:"France", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"},
+    {loc:"Germany", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"},
+    {loc:"Spain", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"},
+    {loc:"Switzerland", clicks:0, impr:0, ctr:0, cost:0, conv:0, status:"Removed", removedOn:"16 Jun 2026"}
   ]
 };
 
@@ -525,18 +543,42 @@ function renderKeywordTable(brk, campaign){
     ` — ${newCount} added 1 Jul 2026${pausedCount ? `, ${pausedCount} currently paused` : ""}.`;
 }
 
+function locationChip(status){
+  if (status === "Removed") return `<span class="chip removed">Removed</span>`;
+  return `<span class="chip active">Active</span>`;
+}
+
 function renderLocations(brk){
-  const rows = locationData[brk];
+  const rows = [...locationData[brk]].sort((a,b) => {
+    if (a.status !== b.status) return a.status === "Active" ? -1 : 1;
+    return b.clicks - a.clicks;
+  });
   const tbody = document.querySelector("#locTable tbody");
-  tbody.innerHTML = rows.map(l => `<tr>
-    <td>${l.loc}</td><td class="num">${fmtNum(l.clicks)}</td><td class="num">${fmtNum(l.impr)}</td>
+  tbody.innerHTML = rows.map(l => `<tr${l.status==="Removed" ? ' style="opacity:0.6"' : ''}>
+    <td>${l.loc}</td><td>${locationChip(l.status)}</td><td class="num">${fmtNum(l.clicks)}</td><td class="num">${fmtNum(l.impr)}</td>
     <td class="num">${fmtPct(l.ctr)}</td><td class="num">${fmtInr(l.cost)}</td><td class="num">${l.conv.toFixed(0)}</td>
   </tr>`).join("");
+
+  const removedTop = rows.filter(r => r.status === "Removed" && r.clicks > 0)
+    .sort((a,b) => b.clicks - a.clicks);
+  const alertEl = document.getElementById("locAlert");
+  if (removedTop.length) {
+    const names = removedTop.map(r => `<strong>${r.loc}</strong> (removed ${r.removedOn})`).join(", ");
+    alertEl.innerHTML = `⚠ ${names} — ${removedTop.length > 1 ? "these were the top-performing markets and are" : "this was a top-performing market and is"} no longer targeted. Figures shown reflect activity while still active.`;
+    alertEl.classList.add("show");
+  } else {
+    alertEl.classList.remove("show");
+  }
+
+  const noteEl = document.getElementById("locNote");
+  const activeCount = rows.filter(r=>r.status==="Active").length;
+  const removedCount = rows.filter(r=>r.status==="Removed").length;
+  noteEl.textContent = `Where clicks and spend are coming from — ${activeCount} location${activeCount===1?"":"s"} currently active, ${removedCount} removed`;
 
   const ctx = document.getElementById("locChart");
   const chartData = {
     labels: rows.map(r=>r.loc),
-    datasets: [{ label:"Clicks", data: rows.map(r=>r.clicks), backgroundColor:"#1a56db" }]
+    datasets: [{ label:"Clicks", data: rows.map(r=>r.clicks), backgroundColor: rows.map(r => r.status==="Removed" ? "#f28b82" : "#1a56db") }]
   };
   if (locChart) { locChart.data = chartData; locChart.update(); }
   else {
