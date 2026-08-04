@@ -3,7 +3,7 @@
 {
   "name": "Google Ads Campaign Dashboard",
   "schemaVersion": 1,
-  "description": "Google Ads performance dashboard for the Ai Development, Chatbot, GenAI and Workflow Automation campaigns (Antier account). Shows KPI totals, campaign comparison, keywords, locations, and age/gender demographics for the last 7 days. Data is a static snapshot manually pulled from the Google Ads UI on 28 Jul 2026 (no live connector authorized yet)."
+  "description": "Google Ads performance dashboard for the Ai Development, Chatbot, GenAI and Workflow Automation campaigns (Antier account). Shows KPI totals, campaign comparison, keywords, locations, and age/gender demographics for the custom date range 23 Jul - 4 Aug 2026. Data is a static snapshot manually pulled from the Google Ads UI on 4 Aug 2026 (no live connector authorized yet)."
 }
 </script>
 <html lang="en">
@@ -82,13 +82,13 @@
 <div class="wrap">
   <header>
     <h1>Google Ads Campaign Performance <span class="badge">Antier · Search</span></h1>
-    <div class="sub">Scope: Ai Development, Chatbot, GenAI, Workflow Automation &nbsp;·&nbsp; Landing domain: ai.antier.com &nbsp;·&nbsp; Account currency: ₹ INR &nbsp;·&nbsp; Data refreshed 30 Jul 2026</div>
+    <div class="sub">Scope: Ai Development, Chatbot, GenAI, Workflow Automation &nbsp;·&nbsp; Landing domain: ai.antier.com &nbsp;·&nbsp; Account currency: ₹ INR &nbsp;·&nbsp; Data refreshed 4 Aug 2026</div>
   </header>
 
   <div class="controls">
     <div>
       <span class="seg-label">Date range</span>
-      <span class="pill">Last 7 days (23–29 Jul 2026)</span>
+      <span class="pill">23 Jul – 4 Aug 2026</span>
     </div>
   </div>
 
@@ -96,7 +96,7 @@
 
   <div class="card">
     <h2>Campaign comparison</h2>
-    <div class="note">Clicks, cost and conversions per campaign — Last 7 days (23–29 Jul 2026)</div>
+    <div class="note">Clicks, cost and conversions per campaign — 23 Jul – 4 Aug 2026</div>
     <div class="grid2">
       <div class="chart-box"><canvas id="campChart"></canvas></div>
       <div style="overflow:auto">
@@ -150,41 +150,34 @@
   </div>
 
   <div class="foot">
-    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 30 Jul 2026 for the Last 7 days window (23–29 Jul 2026). Ad targeting has moved from antier.com to the new domain <strong>ai.antier.com</strong> (confirmed via the Ai Development landing-page report). The Chatbot campaign remains Paused (₹500/day budget) with all keywords showing zero activity. Ai Development's location targeting shows 6 active locations this week, led by UAE; no residual activity from the previously removed Saudi Arabia / South Korea locations. No conversions were recorded across any of the four campaigns in this window. This view is Last 7 days only — the 30-day and 90-day toggles have been removed per request. Re-run the pull to refresh with a later snapshot.
+    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 4 Aug 2026 for the custom date range 23 Jul – 4 Aug 2026. Ad targeting has moved from antier.com to the new domain <strong>ai.antier.com</strong> (confirmed via the Ai Development landing-page report). The Chatbot campaign remains Paused (₹500/day budget) with all keywords showing zero activity across the full window. Ai Development's location targeting shows 6 active locations, led by UAE (82 clicks); no residual activity from the previously removed Saudi Arabia / South Korea locations. No conversions were recorded across any of the four campaigns in this window. This view uses a custom date range — the 30-day and 90-day toggles have been removed per request. Re-run the pull to refresh with a later snapshot.
   </div>
 </div>
 
 <script>
 
-// Refreshed 30 Jul 2026 from live Google Ads UI — Last 7 days (23-29 Jul 2026).
+// Refreshed 4 Aug 2026 from live Google Ads UI — Custom range 23 Jul - 4 Aug 2026.
 const campaignData = [
-  {name:"Ai Development", status:"eligible", clicks:62, impr:2644, ctr:2.34, cpc:106.53, cost:6605.00, conv:0, convRate:0},
+  {name:"Ai Development", status:"eligible", clicks:103, impr:4721, ctr:2.18, cpc:101.09, cost:10412.55, conv:0, convRate:0},
   {name:"Chatbot", status:"paused", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0, convRate:0},
-  {name:"GenAI", status:"eligible", clicks:22, impr:467, ctr:4.71, cpc:140.48, cost:3090.59, conv:0, convRate:0},
-  {name:"Workflow Automation", status:"eligible", clicks:15, impr:794, ctr:1.89, cpc:212.39, cost:3185.91, conv:0, convRate:0}
+  {name:"GenAI", status:"eligible", clicks:41, impr:1005, ctr:4.08, cpc:130.52, cost:5351.18, conv:0, convRate:0},
+  {name:"Workflow Automation", status:"eligible", clicks:28, impr:1340, ctr:2.09, cpc:189.82, cost:5315.10, conv:0, convRate:0}
 ];
 
-// Keyword inventory per campaign, Last 7 days (23-29 Jul 2026). Includes 0-activity keywords.
+// Keyword inventory per campaign, Custom range 23 Jul - 4 Aug 2026. Includes 0-activity keywords.
 const keywordDataByCampaign = {
   "Ai Development": {
     rows: [
-      {kw:'"artificial intelligence solutions"', match:"Phrase", status:"Eligible", clicks:24, impr:709, ctr:3.39, cpc:129.27, cost:3102.44, conv:0},
-      {kw:"ai software development services", match:"Broad", status:"Eligible", clicks:23, impr:1499, ctr:1.53, cpc:76.57, cost:1761.11, conv:0},
-      {kw:'"ai solutions"', match:"Phrase", status:"Eligible", clicks:11, impr:190, ctr:5.79, cpc:115.52, cost:1270.70, conv:0},
-      {kw:'"ai development company"', match:"Phrase", status:"Eligible", clicks:2, impr:19, ctr:10.53, cpc:103.56, cost:207.12, conv:0},
-      {kw:'"ai software development"', match:"Phrase", status:"Eligible", clicks:1, impr:155, ctr:0.65, cpc:156.44, cost:156.44, conv:0},
-      {kw:'"ai software companies"', match:"Phrase", status:"Eligible", clicks:1, impr:51, ctr:1.96, cpc:107.19, cost:107.19, conv:0},
+      {kw:'"artificial intelligence solutions"', match:"Phrase", status:"Eligible", clicks:38, impr:1223, ctr:3.11, cpc:117.78, cost:4475.49, conv:0},
+      {kw:"ai software development services", match:"Broad", status:"Eligible", clicks:37, impr:2635, ctr:1.40, cpc:77.29, cost:2859.75, conv:0},
+      {kw:'"ai solutions"', match:"Phrase", status:"Eligible", clicks:21, impr:434, ctr:4.84, cpc:109.73, cost:2304.38, conv:0},
+      {kw:'"ai software companies"', match:"Phrase", status:"Eligible", clicks:3, impr:167, ctr:1.80, cpc:101.66, cost:304.99, conv:0},
+      {kw:'"ai software development"', match:"Phrase", status:"Eligible", clicks:2, impr:171, ctr:1.17, cpc:130.41, cost:260.82, conv:0},
+      {kw:'"ai development company"', match:"Phrase", status:"Eligible", clicks:2, impr:54, ctr:3.70, cpc:103.56, cost:207.12, conv:0},
       {kw:'"ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:20, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"enterprise ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
       {kw:'"hire ai developers"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"ai app development company"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"ai software development companies"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"ai consulting company"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"ai product development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"ai development services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"enterprise ai solutions"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"custom ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"llm development services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      {kw:'"enterprise ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+      {kw:'"ai app development company"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
     ]
   },
   "Chatbot": {
@@ -199,61 +192,53 @@ const keywordDataByCampaign = {
   },
   "GenAI": {
     rows: [
-      {kw:'"generative ai services"', match:"Phrase", status:"Eligible", clicks:13, impr:222, ctr:5.86, cpc:128.44, cost:1669.67, conv:0},
-      {kw:'"generative ai solutions"', match:"Phrase", status:"Eligible", clicks:7, impr:168, ctr:4.17, cpc:150.64, cost:1054.49, conv:0},
-      {kw:'"generative ai app development"', match:"Phrase", status:"Eligible", clicks:2, impr:43, ctr:4.65, cpc:183.22, cost:366.43, conv:0},
+      {kw:'"generative ai services"', match:"Phrase", status:"Eligible", clicks:20, impr:431, ctr:4.64, cpc:124.53, cost:2490.59, conv:0},
+      {kw:'"generative ai solutions"', match:"Phrase", status:"Eligible", clicks:15, impr:450, ctr:3.33, cpc:134.33, cost:2015.00, conv:0},
+      {kw:'"generative ai development company"', match:"Phrase", status:"Eligible", clicks:2, impr:20, ctr:10.00, cpc:116.70, cost:233.40, conv:0},
+      {kw:'"generative ai app development"', match:"Phrase", status:"Eligible", clicks:2, impr:45, ctr:4.44, cpc:183.22, cost:366.43, conv:0},
+      {kw:'"generative ai technology services"', match:"Phrase", status:"Eligible", clicks:2, impr:26, ctr:7.69, cpc:122.88, cost:245.76, conv:0},
+      {kw:'"generative ai development services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
+      {kw:'"generative ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:8, ctr:0, cpc:0, cost:0, conv:0},
+      {kw:'"generative ai consulting"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
       {kw:'"genai services"', match:"Phrase", status:"Eligible", clicks:0, impr:14, ctr:0, cpc:0, cost:0, conv:0},
       {kw:'"genai solutions"', match:"Phrase", status:"Eligible", clicks:0, impr:10, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"generative ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:8, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"generative ai development company"', match:"Phrase", status:"Eligible", clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"generative ai development services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"generative ai consulting"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"gen ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"gen ai development services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"generative ai technology services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"custom generative ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"genai services & solutions"', match:"Phrase", status:"Not eligible - Low search volume", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:"[openai clone]", match:"Exact", status:"Paused", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      {kw:'"gen ai development"', match:"Phrase", status:"Eligible", clicks:0, impr:1, ctr:0, cpc:0, cost:0, conv:0},
+      {kw:'"gen ai development services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
     ]
   },
   "Workflow Automation": {
     rows: [
-      {kw:'"workflow automation solutions"', match:"Phrase", status:"Eligible", clicks:9, impr:475, ctr:1.89, cpc:250.41, cost:2253.70, conv:0},
-      {kw:'"workflow automation agency"', match:"Phrase", status:"Eligible", clicks:4, impr:26, ctr:15.38, cpc:140.68, cost:562.70, conv:0},
-      {kw:'"workflow automation company"', match:"Phrase", status:"Eligible", clicks:1, impr:56, ctr:1.79, cpc:185.46, cost:185.46, conv:0},
-      {kw:'"end to end workflow automation solutions"', match:"Phrase", status:"Not eligible - Low search volume", clicks:1, impr:12, ctr:8.33, cpc:184.05, cost:184.05, conv:0},
-      {kw:'"business workflow automation services"', match:"Phrase", status:"Eligible", clicks:0, impr:219, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"workflow automation for enterprises"', match:"Phrase", status:"Eligible", clicks:0, impr:6, ctr:0, cpc:0, cost:0, conv:0},
+      {kw:'"workflow automation solutions"', match:"Phrase", status:"Eligible", clicks:10, impr:658, ctr:1.52, cpc:243.68, cost:2436.76, conv:0},
+      {kw:'"business workflow automation services"', match:"Phrase", status:"Eligible", clicks:9, impr:420, ctr:2.14, cpc:163.38, cost:1470.43, conv:0},
+      {kw:'"workflow automation agency"', match:"Phrase", status:"Eligible", clicks:4, impr:36, ctr:11.11, cpc:140.68, cost:562.70, conv:0},
+      {kw:'"workflow automation company"', match:"Phrase", status:"Eligible", clicks:3, impr:132, ctr:2.27, cpc:153.08, cost:459.25, conv:0},
+      {kw:'"digital workflow automation services"', match:"Phrase", status:"Eligible", clicks:1, impr:60, ctr:1.67, cpc:201.91, cost:201.91, conv:0},
+      {kw:'"end to end workflow automation solutions"', match:"Phrase", status:"Not eligible - Low search volume", clicks:1, impr:15, ctr:6.67, cpc:184.05, cost:184.05, conv:0},
       {kw:'"custom business process automation"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
       {kw:'"workflow automation consulting"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"digital workflow automation services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"workflow automation software development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"custom workflow automation development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"enterprise workflow automation development"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"enterprise workflow automation services"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"workflow automation service provider"', match:"Phrase", status:"Eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0},
-      {kw:'"reduce manual workflow using ai"', match:"Phrase", status:"Not eligible - Low search volume", clicks:0, impr:0, ctr:0, cpc:0, cost:0, conv:0}
+      {kw:'"workflow automation for enterprises"', match:"Phrase", status:"Eligible", clicks:0, impr:9, ctr:0, cpc:0, cost:0, conv:0},
+      {kw:'"workflow automation software development"', match:"Phrase", status:"Eligible", clicks:0, impr:9, ctr:0, cpc:0, cost:0, conv:0}
     ]
   }
 };
 
-// Locations — Ai Development, Last 7 days (23-29 Jul 2026). Verified against Google Ads Locations report (total 62/2,644/₹6,605.00).
+// Locations — Ai Development, Custom range 23 Jul - 4 Aug 2026. Verified against Google Ads Locations report (total 103/4,721/₹10,412.55).
 const locationData = [
-  {loc:"United Arab Emirates", clicks:48, impr:1488, ctr:3.23, cost:4947.11, conv:0, status:"Active"},
-  {loc:"United Kingdom", clicks:6, impr:127, ctr:4.72, cost:711.84, conv:0, status:"Active"},
-  {loc:"Singapore", clicks:5, impr:756, ctr:0.66, cost:661.49, conv:0, status:"Active"},
-  {loc:"Canada", clicks:2, impr:115, ctr:1.74, cost:198.41, conv:0, status:"Active"},
-  {loc:"Australia", clicks:1, impr:117, ctr:0.85, cost:86.15, conv:0, status:"Active"},
-  {loc:"United States", clicks:0, impr:41, ctr:0, cost:0, conv:0, status:"Active"}
+  {loc:"United Arab Emirates", clicks:82, impr:2726, ctr:3.01, cost:8071.64, conv:0, status:"Active"},
+  {loc:"United Kingdom", clicks:7, impr:195, ctr:3.59, cost:810.43, conv:0, status:"Active"},
+  {loc:"Singapore", clicks:11, impr:1383, ctr:0.80, cost:1245.92, conv:0, status:"Active"},
+  {loc:"Canada", clicks:2, impr:203, ctr:0.99, cost:198.41, conv:0, status:"Active"},
+  {loc:"Australia", clicks:1, impr:161, ctr:0.62, cost:86.15, conv:0, status:"Active"},
+  {loc:"United States", clicks:0, impr:56, ctr:0, cost:0, conv:0, status:"Active"}
 ];
 
-// Age / gender demographics — Ai Development, Last 7 days. Verified against Google Ads Age/Gender report (total 62 clicks).
+// Age / gender demographics — Ai Development, Custom range 23 Jul - 4 Aug 2026. Verified against Google Ads Age/Gender report (total 103 clicks).
 const ageData = [
-  {label:"18-24", clicks:0}, {label:"25-34", clicks:27}, {label:"35-44", clicks:15},
-  {label:"45-54", clicks:2}, {label:"55-64", clicks:4}, {label:"65+", clicks:1}, {label:"Unknown", clicks:13}
+  {label:"18-24", clicks:0}, {label:"25-34", clicks:44}, {label:"35-44", clicks:21},
+  {label:"45-54", clicks:6}, {label:"55-64", clicks:6}, {label:"65+", clicks:5}, {label:"Unknown", clicks:21}
 ];
 const genderData = [
-  {label:"Female", clicks:10}, {label:"Male", clicks:39}, {label:"Unknown", clicks:13}
+  {label:"Female", clicks:14}, {label:"Male", clicks:68}, {label:"Unknown", clicks:21}
 ];
 
 const fmtInr = n => "₹" + Number(n).toLocaleString("en-IN", {maximumFractionDigits:0});
@@ -337,7 +322,7 @@ function renderKeywordTable(campaign){
     <td class="num">${fmtInr(k.cost)}</td><td class="num">${k.conv.toFixed(0)}</td>
   </tr>`).join("");
   document.getElementById("kwNote").textContent =
-    `Showing ${data.rows.length} keywords in ${campaign} for Last 7 days (21–27 Jul 2026)` +
+    `Showing ${data.rows.length} keywords in ${campaign} for 23 Jul – 4 Aug 2026` +
     (campaign === "Chatbot" ? " — campaign is paused, all keywords show 0 activity." : ", including 0 impression/0 click keywords.");
 }
 
