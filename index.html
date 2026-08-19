@@ -3,7 +3,7 @@
 {
   "name": "Google Ads Campaign Dashboard",
   "schemaVersion": 1,
-  "description": "Google Ads performance dashboard for the Ai Development, Chatbot, GenAI, Workflow Automation and Ai consulting campaigns (Antier account). Shows KPI totals, campaign comparison, keywords, locations, and age/gender demographics for the custom date range 23 Jul - 17 Aug 2026. Data is a static snapshot manually pulled from the Google Ads UI on 17 Aug 2026 (no live connector authorized yet)."
+  "description": "Google Ads performance dashboard for the Ai Development, Chatbot, GenAI, Workflow Automation and Ai consulting campaigns (Antier account). Shows KPI totals, campaign comparison, keywords, locations, and age/gender demographics for the custom date range 23 Jul - 19 Aug 2026. Data is a static snapshot manually pulled from the Google Ads UI on 19 Aug 2026 (no live connector authorized yet)."
 }
 </script>
 <html lang="en">
@@ -82,13 +82,13 @@
 <div class="wrap">
   <header>
     <h1>Google Ads Campaign Performance <span class="badge">Antier · Search</span></h1>
-    <div class="sub">Scope: Ai Development, Chatbot, GenAI, Workflow Automation, Ai consulting &nbsp;·&nbsp; Landing domain: ai.antier.com &nbsp;·&nbsp; Account currency: ₹ INR &nbsp;·&nbsp; Data refreshed 17 Aug 2026</div>
+    <div class="sub">Scope: Ai Development, Chatbot, GenAI, Workflow Automation, Ai consulting &nbsp;·&nbsp; Landing domain: ai.antier.com &nbsp;·&nbsp; Account currency: ₹ INR &nbsp;·&nbsp; Data refreshed 19 Aug 2026</div>
   </header>
 
   <div class="controls">
     <div>
       <span class="seg-label">Date range</span>
-      <span class="pill">23 Jul – 17 Aug 2026</span>
+      <span class="pill">23 Jul – 19 Aug 2026</span>
     </div>
   </div>
 
@@ -96,7 +96,7 @@
 
   <div class="card">
     <h2>Campaign comparison</h2>
-    <div class="note">Clicks, cost and conversions per campaign — 23 Jul – 17 Aug 2026</div>
+    <div class="note">Clicks, cost and conversions per campaign — 23 Jul – 19 Aug 2026</div>
     <div class="grid2">
       <div class="chart-box"><canvas id="campChart"></canvas></div>
       <div style="overflow:auto">
@@ -151,22 +151,22 @@
   </div>
 
   <div class="foot">
-    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 17 Aug 2026 for the custom date range 23 Jul – 17 Aug 2026. A new campaign, <strong>Ai consulting</strong> (₹1,000/day budget), was created and launched on 17 Aug 2026 — it is Enabled and in the Learning phase with no activity yet in this window, with 10 seed keywords already live under the "AI Strategy Consulting" ad group. Since the last pull, all four original campaigns have moved to <strong>Paused</strong>: Ai Development and GenAI were paused during this window (both still show accumulated clicks/cost from before they paused), Workflow Automation is now paused, and Chatbot remains paused with zero activity as before. Keyword, location and demographic breakdowns below reflect the last verified pull (23 Jul – 10 Aug 2026) for the original four campaigns — a temporary Google Ads UI access issue prevented refreshing those specific breakdowns during this session; the KPI totals and campaign comparison table above are fully refreshed and verified for 23 Jul – 17 Aug 2026. This view uses a custom date range — the 30-day and 90-day toggles have been removed per request. Re-run the pull to refresh the keyword/location/demographic sections with a later snapshot.
+    Reporting reflects Google Ads reporting time zone (GMT+05:30). This dashboard is a snapshot pulled directly from the Google Ads UI on 19 Aug 2026 for the custom date range 23 Jul – 19 Aug 2026. All five campaigns are now confirmed <strong>Paused</strong> except <strong>Ai consulting</strong>, which is Enabled: it launched 17 Aug 2026 (₹1,000/day budget) and has now recorded its first activity in this window — 7 clicks, 499 impressions, ₹2,404.76 spend — under its 10 seed keywords in the "AI Strategy Consulting" ad group. Ai Development, GenAI, Workflow Automation and Chatbot show no change in cost or clicks since the last pull, confirming zero new activity while paused. Keyword, location and demographic breakdowns below reflect the last verified pull (23 Jul – 10 Aug 2026) for the four original campaigns — a temporary Google Ads UI access issue prevented refreshing those specific breakdowns during this session; the KPI totals and campaign comparison table above are fully refreshed and verified for 23 Jul – 19 Aug 2026. This view uses a custom date range — the 30-day and 90-day toggles have been removed per request. Re-run the pull to refresh the keyword/location/demographic sections with a later snapshot.
   </div>
 </div>
 
 <script>
 
-// Refreshed 17 Aug 2026 from live Google Ads UI — Custom range 23 Jul - 17 Aug 2026.
+// Refreshed 19 Aug 2026 from live Google Ads UI — Custom range 23 Jul - 19 Aug 2026.
 const campaignData = [
   {name:"Ai Development", status:"paused", clicks:223, impr:8956, ctr:2.49, cpc:100.72, cost:22461.33, convRate:0},
   {name:"Chatbot", status:"paused", clicks:0, impr:0, ctr:0, cpc:0, cost:0, convRate:0},
   {name:"GenAI", status:"paused", clicks:93, impr:2298, ctr:4.05, cpc:128.21, cost:11923.82, convRate:0},
-  {name:"Workflow Automation", status:"paused", clicks:65, impr:2831, ctr:2.30, cpc:191.27, cost:12432.85, convRate:0},
-  {name:"Ai consulting", status:"eligible", clicks:0, impr:0, ctr:0, cpc:0, cost:0, convRate:0}
+  {name:"Workflow Automation", status:"paused", clicks:65, impr:2832, ctr:2.30, cpc:191.27, cost:12432.85, convRate:0},
+  {name:"Ai consulting", status:"eligible", clicks:7, impr:499, ctr:1.40, cpc:343.54, cost:2404.76, convRate:0}
 ];
 
-// Keyword inventory per campaign. Ai Development/Chatbot/GenAI/Workflow Automation last verified 23 Jul - 10 Aug 2026 (see foot note); Ai consulting verified 17 Aug 2026.
+// Keyword inventory per campaign. Ai Development/Chatbot/GenAI/Workflow Automation last verified 23 Jul - 10 Aug 2026 (see foot note); Ai consulting totals verified 19 Aug 2026 (per-keyword split not yet available for the new activity).
 const keywordDataByCampaign = {
   "Ai Development": {
     rows: [
@@ -336,8 +336,8 @@ function renderKeywordTable(campaign){
   </tr>`).join("");
   let suffix = ", including 0 impression/0 click keywords.";
   if (campaign === "Chatbot") suffix = " — campaign is paused, all keywords show 0 activity.";
-  if (campaign === "Ai consulting") suffix = " — new campaign launched 17 Aug 2026, no activity yet.";
-  const dateLabel = campaign === "Ai consulting" ? "verified 17 Aug 2026" : "last verified 23 Jul – 10 Aug 2026 snapshot";
+  if (campaign === "Ai consulting") suffix = " — campaign now has 7 clicks/499 impr. overall as of 19 Aug 2026; per-keyword split not yet available.";
+  const dateLabel = campaign === "Ai consulting" ? "totals verified 19 Aug 2026" : "last verified 23 Jul – 10 Aug 2026 snapshot";
   document.getElementById("kwNote").textContent =
     `Showing ${data.rows.length} keyword${data.rows.length===1?"":"s"} in ${campaign} (${dateLabel})` + suffix;
 }
